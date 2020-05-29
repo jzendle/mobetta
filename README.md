@@ -1,2 +1,2 @@
 # mobetta
-script to find momentum stocks from SPX
+script to find momentum stocks from current SPX
