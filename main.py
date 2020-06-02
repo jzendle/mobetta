@@ -5,9 +5,8 @@ import pickle
 
 results_df = pd.DataFrame(columns=['symbol', 'rank', 'MA', 'gap'])
 
-
-# tickers = ['aapl', 'ibm']  # stockapi.get_sp500_tickers()
-tickers = sapi.get_sp500_tickers()
+tickers = ['aapl', 'ibm']  # stockapi.get_sp500_tickers()
+# tickers = sapi.get_sp500_tickers()
 
 for idx, ticker in enumerate(tickers):
     print('getting data for ' + ticker)
