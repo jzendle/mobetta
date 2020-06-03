@@ -15,7 +15,7 @@ def is_gaps(opens, closes, percent=0.15):
             print('hammer detected - current open: '
                   + str(current_open) + ' current_close: ' + str(current_close))
             return True
-        if idx == 0:
+        if idx == 0:  # prevent index out of bounds from logic below
             continue
 
         prev_close = closes[idx-1]
