@@ -37,7 +37,9 @@ def get_ranking(price_series):
     x = range(len(price_series))
     exp_slope, intercept, r_value, p_value, std_err = stats.linregress(
         x, exp_prices)
-
+    intercept  # unused variable warning removal
+    p_value
+    std_err
     #print("r-square: " + str(r_value ** 2))
     #print("slope: " + str(exp_slope))
 
