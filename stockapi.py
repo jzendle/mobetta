@@ -12,7 +12,7 @@ def get_ticker_df(ticker, days=90):
         ticker = re.sub(r"([a-z])\.([a-z])", r"\1-\2", ticker , 0, re.IGNORECASE)
         df = si.get_data(ticker, start_date=before)
     except Exception as e:
-        print('Exception getting data for ' + ticker)
+        print('Exception getting data for ' + str(ticker))
         print(e)
 
     return df
@@ -20,3 +20,19 @@ def get_ticker_df(ticker, days=90):
 
 def get_sp500_tickers():
     return si.tickers_sp500()
+
+def get_nasdaq_tickers():
+    return si.tickers_nasdaq()
+
+def get_dow_tickers():
+    return si.tickers_dow()
+
+dict = { 
+    'sp500' : get_sp500_tickers,
+    'nasdaq' : get_nasdaq_tickers,
+    'dow' : get_dow_tickers
+}
+
+def index_ticker_fn(idx_name):
+    print ( 'index_ticker_fn: ' + idx_name)
+    return dict.get(idx_name)

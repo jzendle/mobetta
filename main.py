@@ -1,56 +1,60 @@
-import pandas as pd
 import stockapi as sapi
+import utils as u
+import pandas as pd
 import regression
-import pickle
 
-def do_analysis():
+def index_df_to_analysis(idx_name):
 
-    sp500_df = pickle.load(open('sp500.p','rb'))
-    tickers = sp500_df.ticker.unique()
+    fname = idx_name + '.p'
+    df = u.read_pickle(fname)
+    tickers = df.ticker.unique()
 
-    results_df = pd.DataFrame(columns=['symbol', 'rank', 'MA', 'gap'])
-
-    # tickers = ['aapl', 'ibm']  # stockapi.get_sp500_tickers()
-    # tickers = sapi.get_sp500_tickers()
-
+    results_df = u.new_analysis_df()
     for idx, ticker in enumerate(tickers):
-        ticker_df = sp500_df.query('ticker == @ticker')
+        ticker_df = df.query('ticker == @ticker')
         if ticker_df is None:
             print('no data for ' + ticker)
             continue
         (ranking, ma, gap) = regression.get_stats(ticker_df)
         results_df.loc[idx] = [ticker, ranking, ma, gap]
 
-
     results_df = results_df.sort_values(by=['rank'], ascending=False)
 
+    analysis_fname = 'analysys-' + fname
 
-    print(results_df.head(20))
-
-    pickle.dump(results_df, open('analysis.p', 'wb'))
+    u.pickle_file(results_df, analysis_fname)
+    create_portfolio(analysis_fname)
 
     return results_df
 
+def index_to_df(index_name):
 
-def sp500_ticker_df():
+    print('retrieving data for index: '+ index_name)
 
-    cols = ['open','high','low','close','adjclose','volume','ticker']
-
-    results_df = pd.DataFrame(columns=cols)
-    tickers = sapi.get_sp500_tickers()
-    #tickers = ['aapl', 'ibm']  # stockapi.get_sp500_tickers()
-    for ticker in enumerate(tickers):
+    fname = index_name + '.p'
+    results_df = u.new_stock_df()
+    tickers = sapi.index_ticker_fn(index_name)()
+    for ticker in tickers:
         ticker_df = sapi.get_ticker_df(ticker)
         if ticker_df is None:
             print('unable to get data for ' + ticker)
             continue
         results_df = results_df.append(ticker_df)
-    pickle.dump(results_df, open('sp500.p', 'wb'))
+    u.pickle_file(results_df, fname)
     return results_df
 
+def create_portfolio(fname):
+    portfolio_name = 'port-new-' + fname 
+    df = u.read_pickle(fname)
+    portfolio = df.sort_values(by=['rank'], ascending=False).query('gap == False').head(10)
+    u.pickle_file(portfolio, portfolio_name)
+    portfolio.head(10)
 
 if '__main__' == __name__:
-    do_analysis()
+    indxs = [ 'sp500' ,'nasdaq', 'dow']
+    [index_to_df(idx) for idx in indxs]
+    [index_df_to_analysis(idx) for idx in indxs]
+
 
 
 
