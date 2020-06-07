@@ -6,13 +6,16 @@ def annualize(percent, days_per_yr=250):
     return (1 + percent)**days_per_yr
 
 
-def is_gaps(opens, closes, percent=0.15):
+def is_gaps(df, percent=0.20):
+    ticker = df['ticker'][0]
+    opens = df['open'].tolist()
+    closes = df['close'].tolist()
     sz = len(opens)
     for idx in range(sz):
         current_open = opens[idx]
         current_close = closes[idx]
         if abs(current_open - current_close) > (current_open * percent):
-            print('hammer detected - current open: '
+            print(ticker + ': hammer detected - current open: '
                   + str(current_open) + ' current_close: ' + str(current_close))
             return True
         if idx == 0:  # prevent index out of bounds from logic below
@@ -21,7 +24,7 @@ def is_gaps(opens, closes, percent=0.15):
         prev_close = closes[idx-1]
         prev_open = opens[idx-1]
         if abs(current_open - prev_close) > (prev_open * percent):
-            print('gap detected - current open: '
+            print(ticker + ': gap detected - current open: '
                   + str(current_open) + ' previous_close: ' + str(prev_close))
             return True
 
@@ -35,12 +38,12 @@ def get_ranking(price_series):
     exp_slope, intercept, r_value, p_value, std_err = stats.linregress(
         x, exp_prices)
 
-    print("r-square: " + str(r_value ** 2))
-    print("slope: " + str(exp_slope))
+    #print("r-square: " + str(r_value ** 2))
+    #print("slope: " + str(exp_slope))
 
     annualized = annualize(exp_slope)
 
-    print('annualized rate of return: ' + str(annualized))
+    #print('annualized rate of return: ' + str(annualized))
 
     return annualized * (r_value**2)
 
@@ -50,17 +53,16 @@ def moving_average(closes):
     sum = 0
 
     for num in closes:
-        sum += num
+       sum += num
 
     return sum / sz
 
 
 def get_stats(df):
-    opens = df['open'].tolist()
-    closes = df['close'].tolist()
+
     adj_closes = df['adjclose'].tolist()
 
-    gap = is_gaps(opens, closes)
+    gap = is_gaps(df)
     ma = moving_average(adj_closes)
     ranking = get_ranking(adj_closes)
 
@@ -68,18 +70,26 @@ def get_stats(df):
 
 
 if __name__ == "__main__":
-
+    import pandas as pd
     stock_prices = [1, 1.01, 1.00, 1.03, 1.00, 1.05, 1.00, 1.07, 1.08]
     print(get_ranking(stock_prices))
+    
+    cols = ['open','high','low','close','adjclose','volume','ticker']
 
-    opens = [1, 2, 3, 4, 5, 7]
-    closes = [2, 3, 4, 5, 6, 8]
+    results_df = pd.DataFrame(columns=cols)
 
-    is_gaps(opens, closes)
+    results_df.ticker = ['ibm', 'ibm', 'ibm', 'ibm', 'ibm', 'ibm']
+    results_df.open = [1, 2, 3, 4, 5, 7]
+    results_df.close = [2, 3, 4, 5, 6, 8]
 
-    opens = [1,   1, 2, 4, 5]
-    closes = [1.5, 3, 4, 4.1, 9]
+    is_gaps(results_df)
+    
+    results_df = pd.DataFrame(columns=cols)
 
-    is_gaps(opens, closes)
+    results_df.ticker = ['ibm', 'ibm', 'ibm', 'ibm', 'ibm']
+    results_df.open = [1,   1, 2, 4, 5]
+    results_df.close = [1.5, 3, 4, 4.1, 9]
 
-    print(moving_average(closes))
+    is_gaps(results_df)
+
+    print(moving_average(results_df.close))

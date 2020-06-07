@@ -4,6 +4,6 @@ import regression
 import pickle
 
 
-df = pickle.load(open( "save.p", "rb" ))
+df = pickle.load(open( "analysis.p", "rb" ))
 
 print(df)

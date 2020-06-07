@@ -14,9 +14,9 @@ def do_analysis():
     # tickers = sapi.get_sp500_tickers()
 
     for idx, ticker in enumerate(tickers):
-        print('getting data for ' + ticker)
         ticker_df = sp500_df.query('ticker == @ticker')
         if ticker_df is None:
+            print('no data for ' + ticker)
             continue
         (ranking, ma, gap) = regression.get_stats(ticker_df)
         results_df.loc[idx] = [ticker, ranking, ma, gap]
