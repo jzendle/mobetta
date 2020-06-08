@@ -15,6 +15,10 @@ def index_df_to_analysis(idx_name):
         if ticker_df is None:
             print('no data for ' + ticker)
             continue
+        len_data = len(ticker_df)
+        if len_data < 80:
+            print('not enough data for ' + ticker + ' - only ' + str(len_data) + ' days of data')
+            continue
         (ranking, ma, gap) = regression.get_stats(ticker_df)
         results_df.loc[idx] = [ticker, ranking, ma, gap]
 
@@ -46,13 +50,13 @@ def index_to_df(index_name):
 def create_portfolio(fname):
     portfolio_name = 'port-new-' + fname 
     df = u.read_pickle(fname)
-    portfolio = df.sort_values(by=['rank'], ascending=False).query('gap == False').head(10)
+    portfolio = df.sort_values(by=['rank'], ascending=False).query('gap == False').head(30)
     u.pickle_file(portfolio, portfolio_name)
     portfolio.head(10)
 
 if '__main__' == __name__:
-    indxs = [ 'sp500' ,'nasdaq', 'dow']
-    [index_to_df(idx) for idx in indxs]
+    indxs = [ 'nasdaq' ,'sp500', 'dow']
+    # [index_to_df(idx) for idx in indxs]
     [index_df_to_analysis(idx) for idx in indxs]
 
 
