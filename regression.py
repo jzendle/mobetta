@@ -1,6 +1,8 @@
 from scipy import stats
 import math
+import logging as l
 
+log = l.getLogger('regression')
 
 def annualize(percent, days_per_yr=250):
     return (1 + percent)**days_per_yr
@@ -15,7 +17,7 @@ def is_gaps(df, percent=0.20):
         current_open = opens[idx]
         current_close = closes[idx]
         if abs(current_open - current_close) > (current_open * percent):
-            print(ticker + ': hammer detected - current open: '
+            log.info(ticker + ': hammer detected - current open: '
                   + str(current_open) + ' current_close: ' + str(current_close))
             return True
         if idx == 0:  # prevent index out of bounds from logic below
@@ -24,7 +26,7 @@ def is_gaps(df, percent=0.20):
         prev_close = closes[idx-1]
         prev_open = opens[idx-1]
         if abs(current_open - prev_close) > (prev_open * percent):
-            print(ticker + ': gap detected - current open: '
+            log.info(ticker + ': gap detected - current open: '
                   + str(current_open) + ' previous_close: ' + str(prev_close))
             return True
 
@@ -40,12 +42,12 @@ def get_ranking(price_series):
     intercept  # unused variable warning removal
     p_value
     std_err
-    #print("r-square: " + str(r_value ** 2))
-    #print("slope: " + str(exp_slope))
+    #log.info("r-square: " + str(r_value ** 2))
+    #log.info("slope: " + str(exp_slope))
 
     annualized = annualize(exp_slope)
 
-    #print('annualized rate of return: ' + str(annualized))
+    #log.info('annualized rate of return: ' + str(annualized))
 
     return annualized * (r_value**2)
 
@@ -73,8 +75,9 @@ def get_stats(df):
 
 if __name__ == "__main__":
     import pandas as pd
+    l.basicConfig(level=l.DEBUG)
     stock_prices = [1, 1.01, 1.00, 1.03, 1.00, 1.05, 1.00, 1.07, 1.08]
-    print(get_ranking(stock_prices))
+    log.info(get_ranking(stock_prices))
     
     cols = ['open','high','low','close','adjclose','volume','ticker']
 
@@ -94,4 +97,4 @@ if __name__ == "__main__":
 
     is_gaps(results_df)
 
-    print(moving_average(results_df.close))
+    log.info(moving_average(results_df.close))

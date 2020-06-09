@@ -1,10 +1,13 @@
 from yahoo_fin import stock_info as si
 import datetime
 import re
+import logging as l
+
+log = l.getLogger('stockapi')
 
 
-def get_ticker_df(ticker, days=90):
-    days = days * 7/5  # convert into number of trading days
+def get_ticker_df(ticker, def_days=90):
+    days = def_days * 7/5  # convert into number of trading days
     before = datetime.datetime.today() - datetime.timedelta(days=days)
     df = None
     try:
@@ -12,8 +15,7 @@ def get_ticker_df(ticker, days=90):
         ticker = re.sub(r"([a-z])\.([a-z])", r"\1-\2", ticker , 0, re.IGNORECASE)
         df = si.get_data(ticker, start_date=before)
     except Exception as e:
-        print('Exception getting data for ' + str(ticker))
-        print(e)
+        log.debug('Exception getting data for ' + str(ticker), exc_info=1)
 
     return df
 
@@ -34,5 +36,5 @@ dict = {
 }
 
 def index_ticker_fn(idx_name):
-    print ( 'index_ticker_fn: ' + idx_name)
+    log.info ( 'index_ticker_fn: ' + idx_name)
     return dict.get(idx_name)

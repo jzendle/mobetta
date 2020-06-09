@@ -1,7 +1,11 @@
-import stockapi as sapi
+import stockapi as s
 import utils as u
+import regression as r
 import pandas as pd
-import regression
+import logging as l
+
+l.basicConfig(filename='output.log', format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=l.INFO)
+log = l.getLogger('main')
 
 def index_df_to_analysis(idx_name):
 
@@ -13,18 +17,18 @@ def index_df_to_analysis(idx_name):
     for idx, ticker in enumerate(tickers):
         ticker_df = df.query('ticker == @ticker')
         if ticker_df is None:
-            print('no data for ' + ticker)
+            log.info('no data for ' + ticker)
             continue
         len_data = len(ticker_df)
         if len_data < 80:
-            print('not enough data for ' + ticker + ' - only ' + str(len_data) + ' days of data')
+            log.info('not enough data for ' + ticker + ' - only ' + str(len_data) + ' days of data')
             continue
-        (ranking, ma, gap) = regression.get_stats(ticker_df)
+        (ranking, ma, gap) = r.get_stats(ticker_df)
         results_df.loc[idx] = [ticker, ranking, ma, gap]
 
     results_df = results_df.sort_values(by=['rank'], ascending=False)
 
-    analysis_fname = 'analysys-' + fname
+    analysis_fname = 'analysis-' + fname
 
     u.pickle_file(results_df, analysis_fname)
     create_portfolio(analysis_fname)
@@ -33,15 +37,15 @@ def index_df_to_analysis(idx_name):
 
 def index_to_df(index_name):
 
-    print('retrieving data for index: '+ index_name)
+    log.info('retrieving data for index: '+ index_name)
 
     fname = index_name + '.p'
     results_df = u.new_stock_df()
-    tickers = sapi.index_ticker_fn(index_name)()
+    tickers = s.index_ticker_fn(index_name)()
     for ticker in tickers:
-        ticker_df = sapi.get_ticker_df(ticker)
+        ticker_df = s.get_ticker_df(ticker)
         if ticker_df is None:
-            print('unable to get data for ' + ticker)
+            log.info('unable to get data for ' + ticker)
             continue
         results_df = results_df.append(ticker_df)
     u.pickle_file(results_df, fname)
@@ -52,12 +56,23 @@ def create_portfolio(fname):
     df = u.read_pickle(fname)
     portfolio = df.sort_values(by=['rank'], ascending=False).query('gap == False').head(30)
     u.pickle_file(portfolio, portfolio_name)
-    portfolio.head(10)
+
+def usage():
+    print('usage: python main.py [--pull | --analyze] # default is to pull and analyze ')
 
 if '__main__' == __name__:
+    import sys
+    did_something = False
     indxs = [ 'nasdaq' ,'sp500', 'dow']
-    # [index_to_df(idx) for idx in indxs]
-    [index_df_to_analysis(idx) for idx in indxs]
+    if len(sys.argv) == 1 or sys.argv[1] == '--pull':
+        [index_to_df(idx) for idx in indxs]
+        did_something = True
+    if len(sys.argv) == 1 or sys.argv[1] == '--analyze':
+        [index_df_to_analysis(idx) for idx in indxs]
+        did_something = True
+    
+    if not did_something:
+        usage()
 
 
 
