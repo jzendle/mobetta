@@ -62,20 +62,19 @@ def usage():
 
 if '__main__' == __name__:
     import sys
-    did_something = False
-    indxs = [ 'nasdaq' ,'sp500', 'dow']
-    if len(sys.argv) == 1 or sys.argv[1] == '--pull':
-        [index_to_df(idx) for idx in indxs]
-        did_something = True
-    if len(sys.argv) == 1 or sys.argv[1] == '--analyze':
-        [index_df_to_analysis(idx) for idx in indxs]
-        did_something = True
-    
-    if not did_something:
+
+    pull = len(sys.argv) == 1 or sys.argv[1] == '--pull'
+    analyze = len(sys.argv) == 1 or sys.argv[1] == '--analyze'
+    if not pull and not analyze:
         usage()
+        exit(0)
 
-
-
+    #indxs = [ 'nasdaq' ,'sp500', 'dow']
+    indxs = [ 'sp500']
+    if pull:
+        [index_to_df(idx) for idx in indxs]
+    if analyze:
+        [index_df_to_analysis(idx) for idx in indxs]
 
 # notes
 # df[df['ticker'] == 'A'] - select all rows with ticker 'A'
