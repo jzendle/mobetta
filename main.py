@@ -64,7 +64,7 @@ if '__main__' == __name__:
     import sys
 
     pull = len(sys.argv) == 1 or sys.argv[1] == '--pull'
-    analyze = len(sys.argv) == 1 or sys.argv[1] == '--analyze'
+    analyze = len(osys.argv) == 1 or sys.argv[1] == '--analyze'
     if not pull and not analyze:
         usage()
         exit(0)
