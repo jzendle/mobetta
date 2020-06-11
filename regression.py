@@ -52,7 +52,13 @@ def get_ranking(price_series):
     return annualized * (r_value**2)
 
 
-def moving_average(closes):
+def exponential_moving_average(df):
+    window = len(df.adjclose)-1
+    ema = df.adjclose.ewm(span=window, adjust=False).mean()
+    return ema[len(ema)-1]
+
+def simple_moving_average(df):
+    closes = df['adjclose'].tolist()
     sz = len(closes)
     sum = 0
 
@@ -64,37 +70,41 @@ def moving_average(closes):
 
 def get_stats(df):
 
+    ticker = df['ticker'][0]
     adj_closes = df['adjclose'].tolist()
+    current_close = adj_closes[len(adj_closes) - 1]
+    sma = simple_moving_average(df)
+    log.info(ticker + ' sma: ' + str(sma) + ' current close: ' + str(current_close))
 
     gap = is_gaps(df)
-    ma = moving_average(adj_closes)
+    above_ma = current_close > sma
     ranking = get_ranking(adj_closes)
 
-    return (ranking, ma, gap)
+    return (ranking, above_ma, gap)
 
 
 if __name__ == "__main__":
     import pandas as pd
+    import utils as u
     l.basicConfig(level=l.DEBUG)
+    results_df = u.new_stock_df()
     stock_prices = [1, 1.01, 1.00, 1.03, 1.00, 1.05, 1.00, 1.07, 1.08]
     log.info(get_ranking(stock_prices))
     
-    cols = ['open','high','low','close','adjclose','volume','ticker']
-
-    results_df = pd.DataFrame(columns=cols)
-
     results_df.ticker = ['ibm', 'ibm', 'ibm', 'ibm', 'ibm', 'ibm']
     results_df.open = [1, 2, 3, 4, 5, 7]
     results_df.close = [2, 3, 4, 5, 6, 8]
 
     is_gaps(results_df)
     
-    results_df = pd.DataFrame(columns=cols)
+    results_df = u.new_stock_df()
 
     results_df.ticker = ['ibm', 'ibm', 'ibm', 'ibm', 'ibm']
     results_df.open = [1,   1, 2, 4, 5]
     results_df.close = [1.5, 3, 4, 4.1, 9]
+    results_df.adjclose = results_df.close 
 
     is_gaps(results_df)
 
-    log.info(moving_average(results_df.close))
+    log.info(simple_moving_average(results_df))
+    log.info(exponential_moving_average(results_df))

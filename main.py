@@ -23,8 +23,8 @@ def index_df_to_analysis(idx_name):
         if len_data < 80:
             log.info('not enough data for ' + ticker + ' - only ' + str(len_data) + ' days of data')
             continue
-        (ranking, ma, gap) = r.get_stats(ticker_df)
-        results_df.loc[idx] = [ticker, ranking, ma, gap]
+        (ranking, current_above_ma, gap) = r.get_stats(ticker_df)
+        results_df.loc[idx] = [ticker, ranking, current_above_ma, gap]
 
     results_df = results_df.sort_values(by=['rank'], ascending=False)
 
@@ -54,8 +54,9 @@ def index_to_df(index_name):
 def create_portfolio(fname):
     portfolio_name = 'port-new-' + fname 
     df = u.read_pickle(fname)
-    portfolio = df.sort_values(by=['rank'], ascending=False).query('gap == False').head(30)
+    portfolio = df.sort_values(by=['rank'], ascending=False).query('gap == False and current_above_ma == True').head(30)
     u.pickle_file(portfolio, portfolio_name)
+    u.dump_file(portfolio_name)
 
 def usage():
     print('usage: python main.py [--pull | --analyze] # default is to pull and analyze ')
