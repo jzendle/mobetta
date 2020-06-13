@@ -12,8 +12,7 @@ def index_df_to_analysis(idx_name):
     fname = idx_name + '.p'
     df = u.read_pickle(fname)
     tickers = df.ticker.unique()
-
-    results_df = u.new_analysis_df()
+    results_list = []
     for idx, ticker in enumerate(tickers):
         ticker_df = df.query('ticker == @ticker')
         if ticker_df is None:
@@ -23,9 +22,10 @@ def index_df_to_analysis(idx_name):
         if len_data < 80:
             log.info('not enough data for ' + ticker + ' - only ' + str(len_data) + ' days of data')
             continue
-        (ranking, current_above_ma, gap) = r.get_stats(ticker_df)
-        results_df.loc[idx] = [ticker, ranking, current_above_ma, gap]
+        rank, current_close, atr, current_above_ma, gap = r.get_stats(ticker_df)
+        results_list.append({'ticker' : ticker, 'rank' : rank, 'close': current_close , 'avg_true_range' : atr, 'current_above_ma': current_above_ma, 'gap': gap})
 
+    results_df = u.new_analysis_df(results_list)
     results_df = results_df.sort_values(by=['rank'], ascending=False)
 
     analysis_fname = 'analysis-' + fname
@@ -38,7 +38,6 @@ def index_df_to_analysis(idx_name):
 def index_to_df(index_name):
 
     log.info('retrieving data for index: '+ index_name)
-
     fname = index_name + '.p'
     results_df = u.new_stock_df()
     tickers = s.index_ticker_fn(index_name)()
@@ -51,10 +50,12 @@ def index_to_df(index_name):
     u.pickle_file(results_df, fname)
     return results_df
 
-def create_portfolio(fname):
-    portfolio_name = 'port-new-' + fname 
-    df = u.read_pickle(fname)
-    portfolio = df.sort_values(by=['rank'], ascending=False).query('gap == False and current_above_ma == True').head(30)
+def create_portfolio(analysis_fname):
+    portfolio_name = 'port-new-' + analysis_fname 
+    df = u.read_pickle(analysis_fname)
+    # keep the best 20% of the index - if a currently held stock falls out of this group - end of it!
+    top_20_pct = int(len(df) / 5)
+    portfolio = df.sort_values(by=['rank'], ascending=False).query('gap == False and current_above_ma == True').head(top_20_pct) 
     u.pickle_file(portfolio, portfolio_name)
     u.dump_file(portfolio_name)
 

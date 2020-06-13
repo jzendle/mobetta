@@ -1,4 +1,5 @@
 from scipy import stats
+import pandas as pd
 import math
 import logging as l
 
@@ -42,13 +43,7 @@ def get_ranking(price_series):
     intercept  # unused variable warning removal
     p_value
     std_err
-    #log.info("r-square: " + str(r_value ** 2))
-    #log.info("slope: " + str(exp_slope))
-
     annualized = annualize(exp_slope)
-
-    #log.info('annualized rate of return: ' + str(annualized))
-
     return annualized * (r_value**2)
 
 
@@ -72,16 +67,39 @@ def get_stats(df):
 
     ticker = df['ticker'][0]
     adj_closes = df['adjclose'].tolist()
-    current_close = adj_closes[len(adj_closes) - 1]
+    closes = df['close'].tolist()
+    current_close = closes[-1]
+    current_adj_close = adj_closes[-1]
     sma = simple_moving_average(df)
-    log.info(ticker + ' sma: ' + str(sma) + ' current close: ' + str(current_close))
-
     gap = is_gaps(df)
-    above_ma = current_close > sma
+    above_ma = current_adj_close > sma
     ranking = get_ranking(adj_closes)
+    atr = avg_true_range(df)
 
-    return (ranking, above_ma, gap)
+    return ranking, current_close, atr, above_ma, gap
 
+def wwma(values, n):
+    """
+    J. Welles Wilder's EMA 
+    """
+    # returns a Series
+    ewm_series = values.ewm(alpha=1/n, adjust=False).mean() 
+    # now average the list 20 values
+    return ewm_series[-1]
+
+# https://en.wikipedia.org/wiki/Average_true_range
+
+def avg_true_range(df, n=20):
+    copy = df.copy()
+    high = copy['high']
+    low = copy.low
+    close = copy.close
+    # store intermediary results
+    copy['tr0'] = abs(high -low)
+    copy['tr1'] = abs(high - close.shift())
+    copy['tr2'] = abs(low - close.shift())
+    tr = copy[['tr0','tr1','tr2']].max(axis=1)
+    return wwma(tr, n)
 
 if __name__ == "__main__":
     import pandas as pd
