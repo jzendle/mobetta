@@ -17,7 +17,7 @@ def get_ticker_df(ticker, def_days=90):
     except Exception as e:
         log.debug('Exception getting data for ' + str(ticker), exc_info=1)
 
-    return df
+    return ticker, df
 
 
 def get_sp500_tickers():

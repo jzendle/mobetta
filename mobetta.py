@@ -3,6 +3,7 @@ import utils as u
 import regression as r
 import pandas as pd
 import logging as l
+from concurrent.futures.thread import ThreadPoolExecutor
 
 l.basicConfig(filename='output.log', format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=l.INFO)
 log = l.getLogger('main')
@@ -36,17 +37,26 @@ def index_df_to_analysis(idx_name):
     return results_df
 
 def index_to_df(index_name):
-
     log.info('retrieving data for index: '+ index_name)
     fname = index_name + '.p'
     results_df = u.new_stock_df()
     tickers = s.index_ticker_fn(index_name)()
-    for ticker in tickers:
-        ticker_df = s.get_ticker_df(ticker)
+    df_list_futures = []
+    log.info('starting concurrent requests ...')
+    with ThreadPoolExecutor(max_workers=600) as executor:
+        for ticker in tickers:
+            future = executor.submit(s.get_ticker_df, ticker)
+            df_list_futures.append(future)
+    
+    log.info('submitted all jobs. waiting for responses ...')
+    for future in df_list_futures: 
+        ticker, ticker_df = future.result()
         if ticker_df is None:
             log.info('unable to get data for ' + ticker)
             continue
         results_df = results_df.append(ticker_df)
+    log.info('done.')
+
     u.pickle_file(results_df, fname)
     return results_df
 
