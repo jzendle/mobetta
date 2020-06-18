@@ -4,5 +4,5 @@
 .vscode
 __pycache__
 *.ipynb*
-*.xlsx
+*.xlsx*
 

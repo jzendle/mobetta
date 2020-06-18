@@ -22,8 +22,8 @@ def dump_file(fname, query=None, num=1000000):
     df = read_pickle(fname)
     if query != None:
         df = df.query(query,engine='python')
-    sz = min( len(df)-1, num-1)
-    print(df.head(sz-1))
+    sz = min( len(df)-1, num)
+    print(df.head(sz))
 
 if __name__ == '__main__':
     import sys
