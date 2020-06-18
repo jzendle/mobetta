@@ -56,8 +56,16 @@ def create_portfolio(analysis_fname):
     # keep the best 20% of the index - if a currently held stock falls out of this group - end of it!
     top_20_pct = int(len(df) / 5)
     portfolio = df.sort_values(by=['rank'], ascending=False).query('gap == False and current_above_ma == True').head(top_20_pct) 
+    # calculate allocation based on a $1000 total size and risk factor of 0.1% (.001)
+    # num_shares = (1000 * .001) / atr == 1/ atr
+    portfolio['num_shares'] = 1 / portfolio['avg_true_range'] 
+    portfolio['cost'] = portfolio['num_shares'] * portfolio['close']
+    # perform allocation for only the first 20 entries - our portfolio
+    num_assets = 20
+    portfolio['pct_alloc'] = 100 * portfolio['cost'][:num_assets] / portfolio['cost'][:num_assets].sum()
+    portfolio.to_excel('portfolio.xlsx', sheet_name = 'portfolio')
     u.pickle_file(portfolio, portfolio_name)
-    u.dump_file(portfolio_name)
+    u.dump_file(portfolio_name,num=20)
 
 def usage():
     print('usage: python main.py [--pull | --analyze] # default is to pull and analyze ')
