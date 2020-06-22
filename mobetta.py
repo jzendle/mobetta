@@ -78,7 +78,7 @@ def create_portfolio(analysis_fname):
     u.dump_file(portfolio_name,num=20)
 
 def usage():
-    print('usage: python main.py [--pull | --analyze] # default is to pull and analyze ')
+    print('usage: python mobetta.py [--pull | --analyze] # default is to pull and analyze ')
 
 if '__main__' == __name__:
     import sys
