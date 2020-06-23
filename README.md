@@ -1,2 +1,2 @@
 # mobetta
-script to find momentum stocks from current S&P 500 stocks
+script to find momentum portfolio from current S&P 500 components
