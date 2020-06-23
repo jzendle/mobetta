@@ -97,6 +97,7 @@ if '__main__' == __name__:
         [index_df_to_analysis(idx) for idx in indxs]
 
 # notes
+
 # df[df['ticker'] == 'A'] - select all rows with ticker 'A'
 # df.query('ticker == "A"')
 # df.query("ticker == @tr") where tr is a variable
