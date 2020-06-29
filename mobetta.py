@@ -14,7 +14,7 @@ def index_df_to_analysis(idx_name):
     df = u.read_pickle(fname)
     tickers = df.ticker.unique()
     results_list = []
-    for idx, ticker in enumerate(tickers):
+    for ticker in tickers:
         ticker_df = df.query('ticker == @ticker')
         if ticker_df is None:
             log.info('no data for ' + ticker)
@@ -24,7 +24,7 @@ def index_df_to_analysis(idx_name):
             log.info('not enough data for ' + ticker + ' - only ' + str(len_data) + ' days of data')
             continue
         rank, current_close, atr, current_above_ma, gap = r.get_stats(ticker_df)
-        results_list.append({'ticker' : ticker, 'rank' : rank, 'close': current_close , 'avg_true_range' : atr, 'current_above_ma': current_above_ma, 'gap': gap})
+        results_list.append({'ticker' : ticker, 'rank' : rank, 'close': current_close , 'atr' : atr, 'cls_gt_ma': current_above_ma, 'gap': gap})
 
     results_df = u.new_analysis_df(results_list)
     results_df = results_df.sort_values(by=['rank'], ascending=False)
@@ -66,10 +66,10 @@ def create_portfolio(analysis_fname):
     df = u.read_pickle(analysis_fname)
     # keep the best 20% of the index - if a currently held stock falls out of this group - end of it!
     top_20_pct = int(len(df) / 5)
-    portfolio = df.sort_values(by=['rank'], ascending=False).query('gap == False and current_above_ma == True').head(top_20_pct) 
+    portfolio = df.sort_values(by=['rank'], ascending=False).query('gap == False and cls_gt_ma == True').head(top_20_pct) 
     # calculate allocation based on a $1000 total size and risk factor of 0.1% (.001)
     # num_shares = (1000 * .001) / atr == 1/ atr
-    portfolio['num_shares'] = 1 / portfolio['avg_true_range'] 
+    portfolio['num_shares'] = 1 / portfolio['atr'] 
     portfolio['cost'] = portfolio['num_shares'] * portfolio['close']
     # perform allocation for only the first 20 entries - our portfolio
     num_assets = 20
@@ -79,7 +79,7 @@ def create_portfolio(analysis_fname):
     u.dump_file(portfolio_name,num=20)
 
 def usage():
-    print('usage: python main.py [--pull | --analyze] # default is to pull and analyze ')
+    print('usage: python mobetta.py [--pull | --analyze] # default is to pull and analyze ')
 
 if '__main__' == __name__:
     import sys
@@ -98,6 +98,7 @@ if '__main__' == __name__:
         [index_df_to_analysis(idx) for idx in indxs]
 
 # notes
+
 # df[df['ticker'] == 'A'] - select all rows with ticker 'A'
 # df.query('ticker == "A"')
 # df.query("ticker == @tr") where tr is a variable

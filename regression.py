@@ -65,7 +65,6 @@ def simple_moving_average(df):
 
 def get_stats(df):
 
-    ticker = df['ticker'][0]
     adj_closes = df['adjclose'].tolist()
     closes = df['close'].tolist()
     current_close = closes[-1]
