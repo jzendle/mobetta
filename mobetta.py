@@ -48,6 +48,7 @@ def index_to_df(index_name):
             future = executor.submit(s.get_ticker_df, ticker)
             df_list_futures.append(future)
     
+
     log.info('submitted all jobs. waiting for responses ...')
     for future in df_list_futures: 
         ticker, ticker_df = future.result()
