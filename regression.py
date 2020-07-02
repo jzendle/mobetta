@@ -8,7 +8,6 @@ log = l.getLogger('regression')
 def annualize(percent, days_per_yr=250):
     return (1 + percent)**days_per_yr
 
-
 def is_gaps(df, percent=0.20):
     ticker = df['ticker'][0]
     opens = df['open'].tolist()
