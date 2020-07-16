@@ -32,8 +32,25 @@ def index_df_to_analysis(idx_name):
     analysis_fname = 'analysis-' + fname
 
     u.pickle_file(results_df, analysis_fname)
+
     create_portfolio(analysis_fname)
 
+    return results_df
+
+def index_to_df_sync(index_name):
+    log.info('retrieving data for index: '+ index_name)
+    fname = index_name + '.p'
+    results_df = u.new_stock_df()
+    tickers = s.index_ticker_fn(index_name)()
+    for ticker in tickers:
+        ticker, ticker_df = s.get_ticker_df( ticker)
+        if ticker_df is None:
+            log.info('unable to get data for ' + ticker)
+            continue
+        results_df = results_df.append(ticker_df)
+    log.info('done.')
+
+    u.pickle_file(results_df, fname)
     return results_df
 
 def index_to_df(index_name):
@@ -62,11 +79,14 @@ def index_to_df(index_name):
     return results_df
 
 def create_portfolio(analysis_fname):
-    portfolio_name = 'port-new-' + analysis_fname 
+    portfolio_name = 'portfolio-' + analysis_fname 
+    the_rest_name = 'not-portfolio-' + analysis_fname 
     df = u.read_pickle(analysis_fname)
     # keep the best 20% of the index - if a currently held stock falls out of this group - end of it!
     top_20_pct = int(len(df) / 5)
-    portfolio = df.sort_values(by=['rank'], ascending=False).query('gap == False and cls_gt_ma == True').head(top_20_pct) 
+    portfolio = df.query('gap == False and cls_gt_ma == True').head(top_20_pct) 
+    the_rest = df[df.ticker.isin(portfolio.ticker) == False] # keep track of ones not in portfolio too
+
     # calculate allocation based on a $1000 total size and risk factor of 0.1% (.001)
     # num_shares = (1000 * .001) / atr == 1/ atr
     portfolio['num_shares'] = 1 / portfolio['atr'] 
@@ -74,8 +94,15 @@ def create_portfolio(analysis_fname):
     # perform allocation for only the first 20 entries - our portfolio
     num_assets = 20
     portfolio['pct_alloc'] = 100 * portfolio['cost'][:num_assets] / portfolio['cost'][:num_assets].sum()
-    portfolio.to_excel('portfolio.xlsx', sheet_name = 'portfolio')
+
+    # Create a Pandas Excel writer using XlsxWriter as the engine.
+    with pd.ExcelWriter('portfolio.xlsx') as writer:  # pylint: disable=abstract-class-instantiated
+        portfolio.to_excel(writer, sheet_name='portfolio')
+        the_rest.to_excel(writer, sheet_name='the rest')
+
     u.pickle_file(portfolio, portfolio_name)
+    u.pickle_file(the_rest, the_rest_name)
+    # dump best part to screen
     u.dump_file(portfolio_name,num=20)
 
 def usage():
