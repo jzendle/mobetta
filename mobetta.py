@@ -9,8 +9,7 @@ l.basicConfig(filename='output.log', format='%(asctime)s - %(name)s - %(levelnam
 log = l.getLogger('main')
 
 def index_df_to_analysis(idx_name):
-
-    fname = idx_name + '.p'
+    fname = idx_name + '.p' # ex. sp500.p
     df = u.read_pickle(fname)
     tickers = df.ticker.unique()
     results_list = []
@@ -60,7 +59,7 @@ def index_to_df(index_name):
     tickers = s.index_ticker_fn(index_name)()
     df_list_futures = []
     log.info('starting concurrent requests ...')
-    with ThreadPoolExecutor(max_workers=600) as executor:
+    with ThreadPoolExecutor(max_workers=50) as executor:
         for ticker in tickers:
             future = executor.submit(s.get_ticker_df, ticker)
             df_list_futures.append(future)
@@ -87,13 +86,8 @@ def create_portfolio(analysis_fname):
     portfolio = df.query('gap == False and cls_gt_ma == True').head(top_20_pct) 
     the_rest = df[df.ticker.isin(portfolio.ticker) == False] # keep track of ones not in portfolio too
 
-    # calculate allocation based on a $1000 total size and risk factor of 0.1% (.001)
-    # num_shares = (1000 * .001) / atr == 1/ atr
-    portfolio['num_shares'] = 1 / portfolio['atr'] 
-    portfolio['cost'] = portfolio['num_shares'] * portfolio['close']
-    # perform allocation for only the first 20 entries - our portfolio
     num_assets = 20
-    portfolio['pct_alloc'] = 100 * portfolio['cost'][:num_assets] / portfolio['cost'][:num_assets].sum()
+    r.do_allocation(portfolio,num_assets)
 
     # Create a Pandas Excel writer using XlsxWriter as the engine.
     with pd.ExcelWriter('portfolio.xlsx') as writer:  # pylint: disable=abstract-class-instantiated

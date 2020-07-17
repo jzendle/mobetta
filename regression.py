@@ -101,6 +101,17 @@ def avg_true_range(df, n=20):
     tr = copy[['tr0','tr1','tr2']].max(axis=1)
     return wwma(tr, n)
 
+def do_allocation(df, num_assets):
+    # In: df must contain 'atr' 'close' columns
+    # Out: num_shares,cost,pct_alloc
+    # calculate allocation based on a $1000 total size and risk factor of 0.1% (.001)
+    # num_shares = (1000 * .001) / atr == 1/ atr
+    df['num_shares'] = 1 / df['atr'] 
+    df['cost'] = df['num_shares'] * df['close']
+    # perform allocation for only the first 20 entries - our portfolio
+    # df['pct_alloc'] = 100 * df['cost'][:num_assets] / df['cost'][:num_assets].sum()
+    df['pct_alloc'] = 100 * df['num_shares'][:num_assets] / df['num_shares'][:num_assets].sum()
+
 if __name__ == "__main__":
     import pandas as pd
     import utils as u
