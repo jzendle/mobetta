@@ -22,15 +22,20 @@ def rebalance(spread_sheet_name, idx_name):
     # kick out current port members that did not make the cut
     for ticker in tickers:
         if len(bad[bad.ticker == ticker]) == 0:  # not found
-            port_df = port_df.append(analysis[analysis.ticker == ticker])
+            tmp_df = analysis[analysis.ticker == ticker]
+            if len(tmp_df) == 0:
+                log.info('ticker not found {}'.format(ticker))
+                bad_list.append({'ticker' : ticker, 'notes' : 'Not found'})
+                continue
+
+            port_df = port_df.append(tmp_df)
         else:
-            bad_list.append(ticker)
+            bad_list.append({'ticker' : ticker, 'notes' : 'SELL'})
             log.info('ticker {} did not make the cut. dropping from portfolio'.format(ticker))
 
     r.do_allocation(port_df, len(port_df))
 
-    for ticker in bad_list:
-        port_df = port_df.append({'ticker': ticker, 'notes' : 'SELL ' + ticker},ignore_index=True )
+    port_df = port_df.append(bad_list,ignore_index=True )
     
 
     sheet_name = 'portfolio-' + str(date.today())
