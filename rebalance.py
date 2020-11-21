@@ -4,7 +4,7 @@ import utils as u
 import pandas as pd
 import logging as l
 from datetime import date
-
+##
 
 l.basicConfig(filename='rebalance.log', format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=l.INFO)
 log = l.getLogger('rebalance')
