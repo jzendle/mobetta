@@ -22,8 +22,9 @@ def index_df_to_analysis(idx_name):
         if len_data < 80:
             log.info('not enough data for ' + ticker + ' - only ' + str(len_data) + ' days of data')
             continue
-        rank, current_close, atr, current_above_ma, gap = r.get_stats(ticker_df)
-        results_list.append({'ticker' : ticker, 'rank' : rank, 'close': current_close , 'atr' : atr, 'cls_gt_ma': current_above_ma, 'gap': gap})
+        rank, current_close, vol, current_above_ma, gap = r.get_stats(ticker_df)
+        results_list.append({'ticker' : ticker, 'rank' : rank, 
+            'close': current_close , 'volatility' : vol, 'cls_gt_ma': current_above_ma, 'gap': gap})
 
     results_df = u.new_analysis_df(results_list)
     results_df = results_df.sort_values(by=['rank'], ascending=False)
@@ -42,7 +43,7 @@ def index_to_df_sync(index_name):
     results_df = u.new_stock_df()
     tickers = s.index_ticker_fn(index_name)()
     for ticker in tickers:
-        ticker, ticker_df = s.get_ticker_df( ticker)
+        ticker_df = s.get_ticker_df( ticker)
         if ticker_df is None:
             log.info('unable to get data for ' + ticker)
             continue
@@ -57,18 +58,19 @@ def index_to_df(index_name):
     fname = index_name + '.p'
     results_df = u.new_stock_df()
     tickers = s.index_ticker_fn(index_name)()
-    df_list_futures = []
+    df_map_futures = {}
     log.info('starting concurrent requests ...')
     with ThreadPoolExecutor(max_workers=50) as executor:
         for ticker in tickers:
             future = executor.submit(s.get_ticker_df, ticker)
-            df_list_futures.append(future)
+            df_map_futures[future] = ticker
     
 
     log.info('submitted all jobs. waiting for responses ...')
-    for future in df_list_futures: 
-        ticker, ticker_df = future.result()
+    for future in df_map_futures: 
+        ticker_df = future.result()
         if ticker_df is None:
+            ticker = df_map_futures[future]
             log.info('unable to get data for ' + ticker)
             continue
         results_df = results_df.append(ticker_df)
@@ -93,11 +95,13 @@ def create_portfolio(analysis_fname):
     with pd.ExcelWriter('portfolio.xlsx') as writer:  # pylint: disable=abstract-class-instantiated
         portfolio.to_excel(writer, sheet_name='portfolio')
         the_rest.to_excel(writer, sheet_name='the rest')
-
+    print('sum of pct: {} sum of cost: {}'.format(portfolio.pct_alloc.sum(),
+    portfolio.cost.sum()))
     u.pickle_file(portfolio, portfolio_name)
     u.pickle_file(the_rest, the_rest_name)
     # dump best part to screen
     u.dump_file(portfolio_name,num=20)
+    
 
 def usage():
     print('usage: python mobetta.py [--pull | --analyze] # default is to pull and analyze ')

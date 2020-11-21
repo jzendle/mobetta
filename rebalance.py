@@ -1,4 +1,5 @@
 import regression as r
+import stockapi as s
 import utils as u
 import pandas as pd
 import logging as l
@@ -9,39 +10,48 @@ l.basicConfig(filename='rebalance.log', format='%(asctime)s - %(name)s - %(level
 log = l.getLogger('rebalance')
 
 def rebalance(spread_sheet_name, idx_name):
-    analysis_fname = 'analysis-' + idx_name + '.p'
+    portfolio_fname = 'portfolio-analysis-' + idx_name + '.p'
     bad_fname = 'not-portfolio-analysis-' + idx_name + '.p'
 
-    analysis = u.read_pickle(analysis_fname)
+    port_df = u.read_pickle(portfolio_fname)
     bad = u.read_pickle(bad_fname)
-    df = u.read_excel(spread_sheet_name)
-    tickers = df.ticker.to_list()
+    spread_sheet = u.read_excel(spread_sheet_name)
+
+    # get current allocation
+    current_alloc = s.get_portfoilo_alloc(spread_sheet)
+    tickers = spread_sheet.ticker.to_list()
 
     bad_list = []
-    port_df = pd.DataFrame()
+    new_port_df = pd.DataFrame()
     # kick out current port members that did not make the cut
     for ticker in tickers:
         if len(bad[bad.ticker == ticker]) == 0:  # not found
-            tmp_df = analysis[analysis.ticker == ticker]
+            tmp_df = port_df[port_df.ticker == ticker]
             if len(tmp_df) == 0:
                 log.info('ticker not found {}'.format(ticker))
                 bad_list.append({'ticker' : ticker, 'notes' : 'Not found'})
                 continue
-
-            port_df = port_df.append(tmp_df)
+            new_port_df = new_port_df.append(tmp_df)
         else:
             bad_list.append({'ticker' : ticker, 'notes' : 'SELL'})
             log.info('ticker {} did not make the cut. dropping from portfolio'.format(ticker))
 
-    r.do_allocation(port_df, len(port_df))
+    # replace kicked out entries
+    if len(bad_list):
+        not_in_port = port_df[~port_df.ticker.isin(new_port_df.ticker)].dropna()
+        new_members = not_in_port[:len(bad_list)].copy()
+        new_members['notes'] = 'NEW BUY' 
+        new_port_df = new_port_df.append(new_members)
 
-    port_df = port_df.append(bad_list,ignore_index=True )
-    
+    r.do_allocation(new_port_df, len(new_port_df))
+
+    new_port_df = new_port_df.append(bad_list,ignore_index=True )
 
     sheet_name = 'portfolio-' + str(date.today())
 
-    # add sheet to spreadsheet
-    u.append_worksheet_to_excel(spread_sheet_name,sheet_name,port_df)
+    # add sheets to spreadsheet
+    u.append_worksheet_to_excel(spread_sheet_name,sheet_name,new_port_df)
+    u.append_worksheet_to_excel(spread_sheet_name,'current-alloc',current_alloc)
 
 def main(argv):
     rebalance('current-portfolio.xlsx','sp500')
