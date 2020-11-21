@@ -1,5 +1,6 @@
 *.pyc
 *.p
+*.pickle
 *.log
 .vscode
 __pycache__
