@@ -3,5 +3,4 @@
 *.log
 .vscode
 __pycache__
-*.xlsx*
 *checkpoint*
