@@ -64,6 +64,8 @@ def simple_moving_average(df):
 
 def get_stats(df):
 
+    # for watch points
+    # ticker = df['ticker'][0] 
     adj_closes = df['adjclose'].tolist()
     closes = df['close'].tolist()
     current_close = closes[-1]
@@ -72,20 +74,18 @@ def get_stats(df):
     gap = is_gaps(df)
     above_ma = current_adj_close > sma
     ranking = get_ranking(adj_closes)
-    atr = avg_true_range(df)
+    vol = volatility(df)
 
-    return ranking, current_close, atr, above_ma, gap
+    return ranking, current_close, vol, above_ma, gap
 
-def wwma(values, n):
-    """
-    J. Welles Wilder's EMA 
-    """
-    # returns a Series
-    ewm_series = values.ewm(alpha=1/n, adjust=False).mean() 
-    # now average the list 20 values
-    return ewm_series[-1]
-
+def volatility(df):
+    close=df.close
+    window_sz=20
+    ret = close.pct_change().rolling(window_sz).std(ddof=0)[-1]
+    return ret
+    
 # https://en.wikipedia.org/wiki/Average_true_range
+# not using for now. keeping for reference
 
 def avg_true_range(df, n=20):
     copy = df.copy()
@@ -98,6 +98,27 @@ def avg_true_range(df, n=20):
     copy['tr2'] = abs(low - close.shift())
     tr = copy[['tr0','tr1','tr2']].max(axis=1)
     return wwma(tr, n)
+
+def wwma(values, n):
+    """
+    J. Welles Wilder's EMA 
+    """
+    # returns a Series
+    ewm_series = values.ewm(alpha=1/n, adjust=False).mean() 
+    # now average the list 20 values
+    return ewm_series[-1]
+    
+def do_allocation(df, num_assets):
+    # In: df must contain 'volatility' 'close' columns
+    # Out: num_shares,cost,pct_alloc
+    
+    inv_vol = 1 / df['volatility'] 
+    df['pct_alloc'] = inv_vol[:num_assets] / inv_vol[:num_assets].sum()
+    # df['num_shares'] = 1 / df['volatility'] 
+    df['cost'] = 1000 * df.pct_alloc
+    # perform allocation for only the first 20 entries - our portfolio
+    # df['pct_alloc'] = 100 * df['cost'][:num_assets] / df['cost'][:num_assets].sum()
+    df['num_shares'] = df.cost / df.close
 
 if __name__ == "__main__":
     import pandas as pd

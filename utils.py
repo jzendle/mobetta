@@ -1,5 +1,6 @@
 import pandas as pd
 import pickle
+import openpyxl
 
 def new_stock_df():
     cols = ['open','high','low','close','adjclose','volume','ticker']
@@ -16,6 +17,18 @@ def pickle_file(df,fname):
 
 def read_pickle(fname):
     return pickle.load(open(fname,'rb'))
+
+def read_excel(fname):
+    return pd.read_excel(fname)
+
+def append_worksheet_to_excel(spreadsheet_fname,sheet_name,df):
+    book = openpyxl.load_workbook(spreadsheet_fname)
+    with pd.ExcelWriter(spreadsheet_fname, engine='openpyxl') as writer:
+        writer.book = book
+        writer.sheets = dict((ws.title, ws) for ws in book.worksheets)    
+
+        ## Your dataframe to append. 
+        df.to_excel(writer, sheet_name)  
 
 def dump_file(fname, query=None, num=1000000):
     print('query: {}'.format(query))
