@@ -1,8 +1,8 @@
 *.pyc
 *.p
 *.pickle
+*.xlsx
 *.log
 .vscode
 __pycache__
 *checkpoint*
-*.xlsx
