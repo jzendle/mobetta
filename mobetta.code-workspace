@@ -5,7 +5,7 @@
 		}
 	],
 	"settings": {
-		"python.pythonPath": "/home/jzendle/venv3/bin/python",
+		"python.pythonPath": "/home/jzendle/venv/pyvenv.cfg",
 		"python.dataScience.jupyterServerURI": " http://localhost:8888/?token=dd67dadd004fa71b4aa1c5adb24cc449ed100e9f01aceb99"
 	}
 }
