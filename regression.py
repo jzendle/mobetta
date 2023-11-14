@@ -9,7 +9,7 @@ def annualize(percent, days_per_yr=250):
     return (1 + percent)**days_per_yr
 
 def is_gaps(df, percent=0.20):
-    ticker = df['ticker'][0]
+    ticker = df['ticker'].iloc[0]
     opens = df['open'].tolist()
     closes = df['close'].tolist()
     sz = len(opens)
@@ -81,7 +81,8 @@ def get_stats(df):
 def volatility(df):
     close=df.close
     window_sz=20
-    ret = close.pct_change().rolling(window_sz).std(ddof=0)[-1]
+    #ret = close.pct_change().rolling(window_sz).std(ddof=0)[-1]
+    ret = close.pct_change().rolling(window_sz).std(ddof=0).iloc[-1]
     return ret
     
 # https://en.wikipedia.org/wiki/Average_true_range

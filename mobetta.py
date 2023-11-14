@@ -39,25 +39,28 @@ def index_df_to_analysis(idx_name):
 
 def index_to_df_sync(index_name):
     log.info('retrieving data for index: '+ index_name)
-    fname = index_name + '.p'
-    results_df = u.new_stock_df()
+    f_name= index_name + '.p'
     tickers = s.index_ticker_fn(index_name)()
+    # tickers = ['AAPL']
+    df_list = []
     for ticker in tickers:
         ticker_df = s.get_ticker_df( ticker)
         if ticker_df is None:
             log.info('unable to get data for ' + ticker)
             continue
-        results_df = results_df.append(ticker_df)
+        df_list.append(ticker_df)
+    # concat the list in one shot
+    results_df = u.new_stock_df(df_list)
     log.info('done.')
 
-    u.pickle_file(results_df, fname)
+    u.pickle_file(results_df, f_name)
     return results_df
 
 def index_to_df(index_name):
     log.info('retrieving data for index: '+ index_name)
     fname = index_name + '.p'
-    results_df = u.new_stock_df()
     tickers = s.index_ticker_fn(index_name)()
+    #tickers = ['AAPL']
     df_map_futures = {}
     log.info('starting concurrent requests ...')
     with ThreadPoolExecutor(max_workers=50) as executor:
@@ -67,13 +70,16 @@ def index_to_df(index_name):
     
 
     log.info('submitted all jobs. waiting for responses ...')
+    df_list = []
     for future in df_map_futures: 
         ticker_df = future.result()
         if ticker_df is None:
             ticker = df_map_futures[future]
             log.info('unable to get data for ' + ticker)
             continue
-        results_df = results_df.append(ticker_df)
+        df_list.append(ticker_df)
+    # concat the list in one shot
+    results_df = u.new_stock_df(df_list)
     log.info('done.')
 
     u.pickle_file(results_df, fname)
