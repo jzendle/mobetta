@@ -16,7 +16,7 @@ def get_ticker_df(ticker, def_days=90):
     df = None
     try:
         # replace dot with dash - only occurs for BRK.B and BF.B
-        ticker = re.sub(r"([a-z])\.([a-z])", r"\1-\2", ticker, 0, re.IGNORECASE)
+        ticker = re.sub(pattern=r"([a-z])\.([a-z])", repl=r"\1-\2", string=ticker, count=0, flags=re.IGNORECASE)
         df = si.get_data(ticker, start_date=before)
     except Exception as e:
         log.info(f"Exception {e} getting data for {ticker}")

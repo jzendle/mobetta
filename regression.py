@@ -1,5 +1,4 @@
 from scipy import stats
-import pandas as pd
 import math
 import logging as l
 
@@ -37,13 +36,15 @@ def get_ranking(price_series):
 
     exp_prices = [math.log(price) for price in price_series]
     x = range(len(price_series))
-    exp_slope, intercept, r_value, p_value, std_err = stats.linregress(
-        x, exp_prices)
-    intercept  # unused variable warning removal
-    p_value
-    std_err
-    annualized = annualize(exp_slope)
-    return annualized * (r_value**2)
+    lr_results = stats.linregress( x, exp_prices)
+    # exp_slope, intercept, r_value, p_value, std_err = stats.linregress( x, exp_prices)
+    # intercept  # unused variable warning removal
+    # p_value
+    # std_err
+    # annualized = annualize(exp_slope)
+    # return annualized * (r_value**2)
+    annualized = annualize(lr_results.slope)
+    return annualized * (lr_results.rvalue**2)
 
 
 def exponential_moving_average(df):
@@ -82,7 +83,7 @@ def volatility(df):
     close=df.close
     window_sz=20
     #ret = close.pct_change().rolling(window_sz).std(ddof=0)[-1]
-    ret = close.pct_change().rolling(window_sz).std(ddof=0).iloc[-1]
+    ret = close.pct_change(fill_method=None).rolling(window_sz).std(ddof=0).iloc[-1]
     return ret
     
 # https://en.wikipedia.org/wiki/Average_true_range
