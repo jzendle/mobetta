@@ -36,3 +36,5 @@ w3lib==2.3.1
 websockets==10.4
 yahoo_fin @ file:///home/jzendle/Projects/yahoo_fin
 zipp==3.23.0
+
+yahoo-fin

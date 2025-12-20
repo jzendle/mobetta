@@ -10,15 +10,15 @@ l.basicConfig(filename='rebalance.log', format='%(asctime)s - %(name)s - %(level
 log = l.getLogger('rebalance')
 
 def rebalance(spread_sheet_name, idx_name):
-    portfolio_fname = 'portfolio-analysis-' + idx_name + '.p'
-    bad_fname = 'not-portfolio-analysis-' + idx_name + '.p'
+    portfolio_filename = 'portfolio-analysis-' + idx_name + '.p'
+    bad_filename = 'not-portfolio-analysis-' + idx_name + '.p'
 
-    port_df = u.read_pickle(portfolio_fname)
-    bad = u.read_pickle(bad_fname)
+    port_df = u.read_pickle(portfolio_filename)
+    bad = u.read_pickle(bad_filename)
     spread_sheet = u.read_excel(spread_sheet_name)
 
     # get current allocation
-    current_alloc = s.get_portfoilo_alloc(spread_sheet)
+    current_alloc = s.get_portfolio_alloc(spread_sheet)
     tickers = spread_sheet.ticker.to_list()
 
     bad_list = []
@@ -54,6 +54,7 @@ def rebalance(spread_sheet_name, idx_name):
     u.append_worksheet_to_excel(spread_sheet_name,'current-alloc',current_alloc)
 
 def main(argv):
+    log.info("rebalance:main argv: {}".format(argv))
     rebalance('current-portfolio.xlsx','sp500')
 
 if __name__ == "__main__":

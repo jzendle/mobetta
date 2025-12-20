@@ -55,12 +55,12 @@ def exponential_moving_average(df):
 def simple_moving_average(df):
     closes = df['adjclose'].tolist()
     sz = len(closes)
-    sum = 0
+    cnt = 0
 
     for num in closes:
-       sum += num
+       cnt += num
 
-    return sum / sz
+    return cnt / sz
 
 
 def get_stats(df):
@@ -99,9 +99,9 @@ def avg_true_range(df, n=20):
     copy['tr1'] = abs(high - close.shift())
     copy['tr2'] = abs(low - close.shift())
     tr = copy[['tr0','tr1','tr2']].max(axis=1)
-    return wwma(tr, n)
+    return welles_wilder_ema(tr, n)
 
-def wwma(values, n):
+def welles_wilder_ema(values, n):
     """
     J. Welles Wilder's EMA 
     """
@@ -123,7 +123,6 @@ def do_allocation(df, num_assets):
     df['num_shares'] = df.cost / df.close
 
 if __name__ == "__main__":
-    import pandas as pd
     import utils as u
     l.basicConfig(level=l.DEBUG)
     results_df = u.new_stock_df()

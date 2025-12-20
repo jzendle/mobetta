@@ -24,8 +24,8 @@ def get_ticker_df(ticker, def_days=90):
     return df
 
 
-def get_portfoilo_alloc(df):
-    # return embelishished copy of input
+def get_portfolio_alloc(df):
+    # return embellished copy of input
     tmp = df.copy()
     tmp["mkt_value"] = tmp.shares * tmp.ticker.apply(lambda x: get_ticker_live(x))
     tmp["current_alloc"] = tmp.mkt_value / tmp.mkt_value.sum()
@@ -65,5 +65,7 @@ idx_dict = {
 def index_ticker_fn(idx_name):
     log.info("index_ticker_fn: " + idx_name)
     tmp = idx_dict.get(idx_name)
-    if tmp is not None:
-        return tmp
+    if tmp is None:
+        log.error("index_ticker_fn: Unknown index: " + idx_name)
+
+    return tmp

@@ -1,6 +1,9 @@
+
 import pandas as pd
 import pickle
 import openpyxl
+from openpyxl import Workbook
+from pandas import ExcelWriter
 
 
 def new_stock_df(data=None):
@@ -18,33 +21,36 @@ def new_analysis_df(data=None):
     return df.rename(index={'index': idx})
 
 
-def pickle_file(df, fname):
-    pickle.dump(df, open(fname, 'wb'))
+def pickle_file(df, filename):
+    with open(filename, 'wb') as file:
+        # noinspection PyTypeChecker
+        pickle.dump(df, file)
 
 
-def read_pickle(fname):
-    return pickle.load(open(fname, 'rb'))
+def read_pickle(filename):
+    return pickle.load(open(filename, 'rb'))
 
 
-def read_excel(fname):
-    return pd.read_excel(fname)
+def read_excel(filename):
+    return pd.read_excel(filename)
 
+def append_worksheet_to_excel(spreadsheet_filename, sheet_name, df):
+    workbook = openpyxl.load_workbook(spreadsheet_filename)
+    writer: ExcelWriter[Workbook]
+    with pd.ExcelWriter(spreadsheet_filename, engine='openpyxl') as writer:
 
-def append_worksheet_to_excel(spreadsheet_fname, sheet_name, df):
-    book = openpyxl.load_workbook(spreadsheet_fname)
-    with pd.ExcelWriter(spreadsheet_fname, engine='openpyxl') as writer:
-        writer.book = book
-        writer.sheets = dict((ws.title, ws) for ws in book.worksheets)
+        writer.book = workbook
+        writer.sheets = dict((ws.title, ws) for ws in workbook.worksheets)
 
         ## Your dataframe to append. 
         df.to_excel(writer, sheet_name)
 
 
-def dump_file(fname, query=None, num=1000000):
-    print('query: {}'.format(query))
-    df = read_pickle(fname)
-    if query != None:
-        df = df.query(query, engine='python')
+def dump_file(filename, to_query=None, num=1000000):
+    print('query: {}'.format(to_query))
+    df = read_pickle(filename)
+    if to_query is not None:
+        df = df.query(to_query, engine='python')
     sz = min(len(df) - 1, num)
     print(df.head(sz))
 
