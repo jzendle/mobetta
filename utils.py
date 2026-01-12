@@ -2,8 +2,6 @@
 import pandas as pd
 import pickle
 import openpyxl
-from openpyxl import Workbook
-from pandas import ExcelWriter
 
 
 def new_stock_df(data=None):
@@ -36,11 +34,9 @@ def read_excel(filename):
 
 def append_worksheet_to_excel(spreadsheet_filename, sheet_name, df):
     workbook = openpyxl.load_workbook(spreadsheet_filename)
-    writer: ExcelWriter[Workbook]
-    with pd.ExcelWriter(spreadsheet_filename, engine='openpyxl') as writer:
-
-        writer.book = workbook
-        writer.sheets = dict((ws.title, ws) for ws in workbook.worksheets)
+    with pd.ExcelWriter(spreadsheet_filename, mode='a', engine='openpyxl') as writer:
+        writer._book = workbook
+        writer._sheets = dict((ws.title, ws) for ws in workbook.worksheets)
 
         ## Your dataframe to append. 
         df.to_excel(writer, sheet_name)
